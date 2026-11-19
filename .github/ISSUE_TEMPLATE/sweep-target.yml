@@ -1,0 +1,24 @@
+name: Sweep target or tweak
+description: Propose a cleanup target or a setting change
+title: "target: "
+labels: ["safety-review"]
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: What it would change
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: A Microsoft or similarly citable page. No source, no target.
+    validations:
+      required: true
+  - type: textarea
+    id: undo
+    attributes:
+      label: How it would be undone
+    validations:
+      required: true

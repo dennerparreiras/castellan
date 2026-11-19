@@ -1,0 +1,17 @@
+[package]
+name = "castellan-tui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Terminal interface for Castellan."
+
+[dependencies]
+castellan-core.workspace = true
+ratatui.workspace = true
+
+[lints]
+workspace = true

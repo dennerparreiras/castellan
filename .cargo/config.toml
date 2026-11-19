@@ -1,0 +1,12 @@
+[alias]
+xtask = "run --package xtask --"
+
+# Static CRT and CFG apply to every Windows MSVC build, including tests.
+# Release size/speed flags live in the workspace Cargo.toml profiles.
+[target.'cfg(all(target_os = "windows", target_env = "msvc"))']
+rustflags = [
+    "-C",
+    "target-feature=+crt-static",
+    "-C",
+    "control-flow-guard",
+]

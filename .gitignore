@@ -1,0 +1,22 @@
+/target/
+**/*.rs.bk
+.cargo/config.toml.local
+*.pdb
+*.exe
+*.dll
+!packaging/**
+.DS_Store
+Thumbs.db
+*.log
+/dist/
+/out/
+.idea/
+.vscode/
+*.user
+.env
+.env.*
+# Minisign private keys and any signing material must never be committed.
+*.key
+minisign.key
+*.pfx
+*.p12

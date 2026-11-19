@@ -1,0 +1,24 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-deny:
+    name: cargo deny
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@70f81531115945ba6eb6b941ec9d39d063438eb9
+        with:
+          command: check
+          arguments: --all-features

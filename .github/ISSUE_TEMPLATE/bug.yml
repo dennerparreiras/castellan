@@ -1,0 +1,24 @@
+name: Bug
+description: Something Castellan did that it should not have done
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of castellan doctor
+      description: Paste the text. Do not include passwords, product keys, or personal file contents.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version from castellan about
+    validations:
+      required: true

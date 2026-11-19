@@ -1,0 +1,16 @@
+name: Feature
+description: A change you want in Castellan
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What should it do
+    validations:
+      required: true
+  - type: textarea
+    id: not
+    attributes:
+      label: What it must not do
+      description: Especially deletions, services, and protections.

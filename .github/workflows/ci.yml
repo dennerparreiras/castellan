@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: fmt, clippy, test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc
+        with:
+          toolchain: 1.100.0
+          components: rustfmt, clippy
+      - name: Local gate
+        run: cargo xtask ci
+
+  arm64:
+    name: build aarch64
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc
+        with:
+          toolchain: 1.100.0
+          targets: aarch64-pc-windows-msvc
+      - name: Build
+        run: cargo build --workspace --target aarch64-pc-windows-msvc
