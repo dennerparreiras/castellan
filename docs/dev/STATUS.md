@@ -6,7 +6,7 @@ Updated 2026-11-19. Product version 0.1.0. This is not v1.0.
 
 | Milestone | State |
 | --- | --- |
-| M0 Foundation | Local gate is green. `cargo xtask ci` exited 0 on 2026-11-19 (fmt, clippy `-D warnings`, workspace tests, architecture scan). The public repository and branch protection are the remaining M0 steps. |
+| M0 Foundation | Local gate is green. `cargo xtask ci` exited 0 on 2026-11-19 (fmt, clippy `-D warnings`, workspace tests, architecture scan). The public repository is https://github.com/dennerparreiras/castellan. Branch protection requires a pull request, linear history, and the CI checks, and it blocks force-pushes. A second reviewer is not required, because there is only one maintainer. |
 | M1 Contracts | Partial. Core types, the action enum, policy, and the Keep Score have tests, including the golden score of 83. Coverage is not measured at 95%. Platform fakes beyond the in-memory sweep view are not built. |
 | M2 Guard and store | Partial. Path rules, `decide_node`, the in-memory walker, the hash-chain ledger, and a read-only live scan exist. Handle-based live delete, undo, and mutation testing are not done. `cargo-mutants` has not been run. |
 | M3 TUI | Partial. One theme, three tabs, help, a small-terminal message, and tests that the overview does not show a fake score. No animation engine, no snapshots, no GIF. |
