@@ -1,0 +1,52 @@
+/* Draft tokens (G0). G1 generates this file from design/tokens.json,
+   together with the TUI theme, so both frontends share one palette. */
+
+:root {
+    color-scheme: dark;
+    --bg-void: #07090d;
+    --bg-base: #0d1016;
+    --surface-1: #141921;
+    --surface-2: #1c2330;
+    --stroke-subtle: #262f3e;
+    --stroke-strong: #343e4e;
+    --text-primary: #ece8df;
+    --text-secondary: #8b95a5;
+    --brand-amethyst: #b094ff;
+    --brand-plasma: #62ccda;
+    --state-ok: #7ec882;
+    --state-warn: #ecbc50;
+    --state-critical: #ec6856;
+    --state-info: #74ace0;
+
+    --radius-control: 6px;
+    --radius-card: 10px;
+    --radius-panel: 16px;
+
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-micro: 140ms;
+    --duration-component: 240ms;
+
+    --font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        color-scheme: light;
+        --bg-void: #f5f6fa;
+        --bg-base: #ffffff;
+        --surface-1: #f0f2f7;
+        --surface-2: #e6e9f1;
+        --stroke-subtle: #d5dae5;
+        --stroke-strong: #b9c1d1;
+        --text-primary: #11141a;
+        --text-secondary: #4d5666;
+        --brand-amethyst: #6f4fe0;
+        --brand-plasma: #0e8fa0;
+        --state-ok: #2e8b3a;
+        --state-warn: #a86f00;
+        --state-critical: #c23a27;
+        --state-info: #2d6fb0;
+    }
+}

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// Band shown next to the Keep Score.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
 pub enum Band {
     /// 90–100.
     Fortified,
@@ -77,6 +78,8 @@ fn curved_points(severity: Severity, penalty_so_far: u32) -> u32 {
 
 /// One line of the explanation.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
 pub struct DeductionLine {
     /// Finding that caused the line.
     pub finding_id: String,
@@ -90,6 +93,8 @@ pub struct DeductionLine {
 
 /// Score of one pillar.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
 pub struct PillarScore {
     /// Which pillar.
     pub pillar: Pillar,
@@ -103,6 +108,8 @@ pub struct PillarScore {
 
 /// The full Keep Score and the explanation.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ScoreReport {
     /// Overall score. `None` when nothing was assessed.
     pub keep_score: Option<u8>,

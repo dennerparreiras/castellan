@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// How serious a finding is. `Info` never changes the health score.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
 pub enum Severity {
     /// Context the user may want. Not a problem.
     Info,
@@ -45,6 +46,7 @@ pub enum Status {
 
 /// One pillar of the Keep Score.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
 pub enum Pillar {
     /// Disks, volumes, and storage reliability.
     Storage,

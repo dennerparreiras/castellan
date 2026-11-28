@@ -13,6 +13,11 @@ description = "Pure domain types, policy, and health score for Castellan."
 thiserror.workspace = true
 serde.workspace = true
 toml.workspace = true
+ts-rs = { workspace = true, optional = true }
+
+[features]
+# Describe the shared types to TypeScript for the desktop frontend.
+ts = ["dep:ts-rs"]
 
 [dev-dependencies]
 proptest.workspace = true

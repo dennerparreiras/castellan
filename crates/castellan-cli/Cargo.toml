@@ -15,10 +15,8 @@ path = "src/main.rs"
 
 [dependencies]
 castellan-core.workspace = true
-castellan-engine.workspace = true
-castellan-guard.workspace = true
+castellan-service.workspace = true
 castellan-tui.workspace = true
-castellan-winapi.workspace = true
 clap.workspace = true
 serde.workspace = true
 serde_json.workspace = true

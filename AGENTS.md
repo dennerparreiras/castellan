@@ -10,7 +10,9 @@ The git root is this directory (`castellan/`), not the parent folder. Run Cargo 
 cargo xtask ci
 ```
 
-That is the local gate: format, clippy (`-D warnings`), tests, architecture scan. Do not claim it passed unless you saw the success output.
+That is the local gate: format, clippy (`-D warnings`), tests, architecture scan, and the desktop frontend gate (`pnpm check` in `apps/desktop`). Do not claim it passed unless you saw the success output.
+
+Plans: `CASTELLAN_GUI_MASTER_PLAN.md` is the current roadmap (desktop app, milestones G0–G12). Session ownership and branches are tracked in `docs/dev/SESSIONS.md`.
 
 ## The machine you are on
 
@@ -41,8 +43,13 @@ The development PC belongs to the maintainer. Profile data may live on a drive o
 | `castellan-guard` | Path rules and the sweep decision. |
 | `castellan-store` | Append-only ledger. |
 | `castellan-engine` | Measurements to findings. |
+| `castellan-sense` | Read-only collectors: facts, live readings, sweep measurements. |
+| `castellan-service` | The facade. Every frontend calls this and nothing below it. |
 | `castellan-tui` | Terminal UI state and drawing. |
 | `castellan-cli` | Binary `castellan`. |
+| `castellan-desktop` (`apps/desktop/src-tauri`) | Binary `Castellan.exe`, the Tauri shell. Frontend in `apps/desktop/src`. |
+
+Frontends (CLI, TUI, desktop) may depend only on `castellan-core` and `castellan-service` (the CLI also on the TUI). `cargo xtask architecture` enforces it.
 | `xtask` | `cargo xtask ci`. |
 
 One owner per crate when several people work at once. The orchestrator owns `castellan-core` and the merge to `main`.

@@ -1,0 +1,218 @@
+@import "./tokens.css";
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+}
+
+/* The window is transparent so Windows can draw Mica behind it. A dark veil
+   keeps text contrast steady whatever the wallpaper is. */
+body {
+    background: color-mix(in srgb, var(--bg-base) 78%, transparent);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+}
+
+.app {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100%;
+    padding: 32px 40px 20px;
+}
+
+.stage {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 40px;
+}
+
+.mark {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+}
+
+.wordmark {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 30px;
+    letter-spacing: 0.12em;
+}
+
+.tagline {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(160px, 220px));
+    gap: 16px;
+}
+
+.tile {
+    display: grid;
+    gap: 6px;
+    padding: 18px 20px;
+    border: 1px solid var(--stroke-strong);
+    border-radius: var(--radius-card);
+    background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+    animation: rise var(--duration-component) var(--ease-out) both;
+}
+
+.tile:nth-child(2) {
+    animation-delay: 40ms;
+}
+.tile:nth-child(3) {
+    animation-delay: 80ms;
+}
+.tile:nth-child(4) {
+    animation-delay: 120ms;
+}
+
+.tile-label {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tile-value {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+
+.tile-note {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.tone-ok {
+    color: var(--state-ok);
+}
+.tone-steady {
+    color: var(--brand-plasma);
+}
+.tone-warn {
+    color: var(--state-warn);
+}
+.tone-critical {
+    color: var(--state-critical);
+}
+.tone-quiet {
+    color: var(--text-secondary);
+}
+
+.notice {
+    max-width: 560px;
+    padding: 16px 20px;
+    border: 1px solid var(--state-warn);
+    border-radius: var(--radius-card);
+    background: color-mix(in srgb, var(--surface-1) 90%, transparent);
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* Crest choreography: the ring draws, the bars rise, the watch light wakes. */
+.crest-ring {
+    stroke-dasharray: 240;
+    stroke-dashoffset: 240;
+    animation: draw 900ms var(--ease-out) forwards;
+}
+
+.crest-bar {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: grow 520ms var(--ease-out) both;
+    animation-delay: 360ms;
+}
+
+.crest-bar[data-index="1"] {
+    animation-delay: 440ms;
+}
+.crest-bar[data-index="2"] {
+    animation-delay: 520ms;
+}
+
+.crest-light {
+    animation: wake 1400ms var(--ease-out) 700ms both;
+}
+
+@keyframes draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes grow {
+    from {
+        transform: scaleY(0);
+    }
+}
+
+@keyframes wake {
+    0% {
+        opacity: 0;
+    }
+    40% {
+        opacity: 1;
+    }
+    70% {
+        opacity: 0.55;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 1ms !important;
+    }
+}
+
+@media (forced-colors: active) {
+    body {
+        background: Canvas;
+        color: CanvasText;
+    }
+    .tile,
+    .notice {
+        border-color: CanvasText;
+        background: Canvas;
+    }
+}

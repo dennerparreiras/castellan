@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   windows:
-    name: fmt, clippy, test
+    name: fmt, clippy, test, desktop ui
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -20,7 +20,14 @@ jobs:
         with:
           toolchain: 1.100.0
           components: rustfmt, clippy
-      - name: Local gate
+      - name: pnpm through corepack
+        # The pnpm version comes from `packageManager` in apps/desktop/package.json.
+        # Node itself is pinned in apps/desktop/.npmrc and fetched by pnpm.
+        run: |
+          corepack enable
+          corepack prepare --activate
+        working-directory: apps/desktop
+      - name: Local gate (Rust and desktop frontend)
         run: cargo xtask ci
 
   arm64:

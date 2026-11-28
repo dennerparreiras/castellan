@@ -21,6 +21,7 @@
 pub mod action;
 pub mod error;
 pub mod ids;
+pub mod live;
 pub mod model;
 pub mod policy;
 pub mod score;

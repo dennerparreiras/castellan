@@ -2,6 +2,8 @@
 
 use std::collections::VecDeque;
 
+pub use castellan_core::live::{Drive, Facts, Memory, Pulse, SweepReading, SweepSize};
+use castellan_core::live::{Overview, Room};
 use castellan_core::policy::ABSOLUTE_MIN_AGE_SECS;
 use castellan_core::{Pillar, ScoreReport, Severity, UserPreferences};
 
@@ -108,6 +110,22 @@ impl Tab {
         }
     }
 
+    /// The room shared with the other frontends.
+    #[must_use]
+    pub const fn from_room(room: Room) -> Self {
+        match room {
+            Room::Overview => Self::Overview,
+            Room::Sweep => Self::Sweep,
+            Room::Vitals => Self::Vitals,
+            Room::Network => Self::Network,
+            Room::Shield => Self::Shield,
+            Room::Boost => Self::Boost,
+            Room::Game => Self::Game,
+            Room::Fix => Self::Fix,
+            Room::Ledger => Self::Ledger,
+        }
+    }
+
     /// `1` is Overview.
     #[must_use]
     pub const fn from_digit(digit: u8) -> Option<Self> {
@@ -143,80 +161,6 @@ pub struct Attention {
     pub room: Option<Tab>,
 }
 
-/// One fixed local drive, as measured.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Drive {
-    /// Short name, such as `C:`.
-    pub label: String,
-    /// Size of the volume.
-    pub total_bytes: u64,
-    /// Bytes free for this user.
-    pub free_bytes: u64,
-    /// Windows lives on this drive.
-    pub system: bool,
-}
-
-/// Physical memory, as measured.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Memory {
-    /// Installed memory Windows can use.
-    pub total_bytes: u64,
-    /// Memory that is free or can be reclaimed right now.
-    pub available_bytes: u64,
-}
-
-/// Plain facts about this PC. A field that could not be read stays empty.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Facts {
-    /// Fixed local drives.
-    pub drives: Vec<Drive>,
-    /// Physical memory.
-    pub memory: Option<Memory>,
-    /// Seconds since Windows started.
-    pub uptime_secs: Option<u64>,
-    /// Logical processors.
-    pub logical_cpus: Option<u32>,
-    /// This binary is a development build.
-    pub dev_build: bool,
-}
-
-/// A fresh live reading. Sent about once a second while the keep is open.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Pulse {
-    /// Busy share of all processors since the previous reading, 0 to 100.
-    pub cpu_percent: Option<u8>,
-    /// Physical memory right now.
-    pub memory: Option<Memory>,
-    /// Seconds since Windows started.
-    pub uptime_secs: Option<u64>,
-}
-
-/// Size of one sweep target from a read-only walk.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SweepSize {
-    /// Files seen.
-    pub files: u64,
-    /// Their size.
-    pub bytes: u64,
-    /// Files old enough for a sweep to consider.
-    pub aged_files: u64,
-    /// Their size.
-    pub aged_bytes: u64,
-    /// The walk stopped early, so the numbers are a floor.
-    pub truncated: bool,
-}
-
-/// What is known about one sweep target.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SweepReading {
-    /// The read-only walk is still running.
-    Measuring,
-    /// The walk finished.
-    Measured(SweepSize),
-    /// The folder could not be read. The text says why, in plain words.
-    Unavailable(String),
-}
-
 /// Rows in the sweep room. The last one is a target Castellan refuses.
 pub const SWEEP_ROWS: u8 = 3;
 
@@ -231,6 +175,30 @@ pub struct KeepWitness {
     pub attention: Vec<Attention>,
     /// Persona line for this reading.
     pub persona: String,
+}
+
+impl KeepWitness {
+    /// Build what the overview draws from the service's overview.
+    #[must_use]
+    pub fn from_overview(overview: &Overview) -> Self {
+        Self {
+            score: overview.score.clone(),
+            show_band: overview.display_band.is_some(),
+            attention: overview
+                .findings
+                .iter()
+                .map(|finding| Attention {
+                    id: finding.id.clone(),
+                    severity: finding.severity,
+                    title: finding.title.clone(),
+                    detail: finding.detail.clone(),
+                    advice: finding.advice.clone(),
+                    room: finding.room.map(Tab::from_room),
+                })
+                .collect(),
+            persona: overview.persona.clone(),
+        }
+    }
 }
 
 /// How the shell opened the keep.

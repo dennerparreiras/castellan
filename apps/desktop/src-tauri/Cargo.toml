@@ -1,0 +1,29 @@
+[package]
+name = "castellan-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Castellan Desktop — the graphical keeper of your machine."
+
+[build-dependencies]
+tauri-build = { version = "2.7.6", features = [] }
+
+[dependencies]
+castellan-core.workspace = true
+castellan-service.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2.12.7", features = [] }
+tauri-plugin-single-instance = "2.5.5"
+tauri-plugin-window-state = "2.5.0"
+
+[dev-dependencies]
+castellan-core = { workspace = true, features = ["ts"] }
+ts-rs.workspace = true
+
+[lints]
+workspace = true

@@ -20,7 +20,7 @@ use std::process::ExitCode;
 use castellan_cli::{Io, execute};
 
 fn main() -> ExitCode {
-    let _ = castellan_winapi::lock_dll_search();
+    castellan_service::harden_process();
     if cfg!(debug_assertions) {
         let _ = writeln!(io::stderr(), "DEV BUILD — real-system actions disabled");
     }
