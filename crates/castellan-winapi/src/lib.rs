@@ -27,13 +27,17 @@ use windows::Win32::Storage::FileSystem::{
     CreateFileW, DELETE, FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_REPARSE_POINT,
     FILE_DISPOSITION_INFO, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT,
     FILE_GENERIC_READ, FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE, GetDiskFreeSpaceExW,
-    GetFileAttributesW, GetFinalPathNameByHandleW, GetTempPath2W, OPEN_EXISTING,
-    SetFileInformationByHandle, SetFileTime, VOLUME_NAME_DOS,
+    GetDriveTypeW, GetFileAttributesW, GetFinalPathNameByHandleW, GetLogicalDrives, GetTempPath2W,
+    OPEN_EXISTING, SetFileInformationByHandle, SetFileTime, VOLUME_NAME_DOS,
 };
 use windows::Win32::System::LibraryLoader::{
     GetProcAddress, LOAD_LIBRARY_SEARCH_SYSTEM32, LoadLibraryExW,
 };
-use windows::Win32::System::SystemInformation::{GetSystemDirectoryW, GetSystemWindowsDirectoryW};
+use windows::Win32::System::SystemInformation::{
+    GetLocalTime, GetSystemDirectoryW, GetSystemWindowsDirectoryW, GetTickCount64,
+    GlobalMemoryStatusEx, MEMORYSTATUSEX,
+};
+use windows::Win32::System::Threading::GetSystemTimes;
 use windows::core::PCWSTR;
 
 /// Failure from a Win32 wrapper. The message names the API and the Win32 code.
@@ -144,6 +148,122 @@ pub fn system_directory() -> Result<PathBuf, WinError> {
     // does not retain the pointer.
     let len = unsafe { GetSystemDirectoryW(Some(buffer.as_mut_slice())) };
     path_from_api("GetSystemDirectoryW", &mut buffer, len)
+}
+
+/// Local time as `HH:MM`. Read-only.
+#[must_use]
+pub fn local_clock() -> String {
+    // SAFETY: GetLocalTime returns a SYSTEMTIME by value and keeps no pointer.
+    let time = unsafe { GetLocalTime() };
+    format!("{:02}:{:02}", time.wHour, time.wMinute)
+}
+
+/// Physical memory, in bytes. Read-only.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MemoryStatus {
+    /// Installed physical memory the system can use.
+    pub total_bytes: u64,
+    /// Physical memory that is free or can be reclaimed right now.
+    pub available_bytes: u64,
+}
+
+/// Processor time counters since boot, in 100 ns ticks. Read-only.
+///
+/// One reading means nothing. Two readings give a load. See [`cpu_busy_percent`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CpuTimes {
+    /// Time all processors spent idle.
+    pub idle: u64,
+    /// Time all processors spent in any state, idle included.
+    pub total: u64,
+}
+
+/// `GlobalMemoryStatusEx`. Read-only.
+pub fn memory_status() -> Result<MemoryStatus, WinError> {
+    let mut status = MEMORYSTATUSEX {
+        dwLength: u32::try_from(std::mem::size_of::<MEMORYSTATUSEX>()).unwrap_or(0),
+        ..Default::default()
+    };
+    // SAFETY: status is a local, writable MEMORYSTATUSEX whose dwLength is set to
+    // its own size, as the API requires. The pointer is not retained.
+    unsafe { GlobalMemoryStatusEx(&raw mut status) }
+        .map_err(|error| WinError::new("GlobalMemoryStatusEx", error.code().0 as u32))?;
+    Ok(MemoryStatus {
+        total_bytes: status.ullTotalPhys,
+        available_bytes: status.ullAvailPhys.min(status.ullTotalPhys),
+    })
+}
+
+/// Seconds since Windows started. Read-only.
+#[must_use]
+pub fn uptime_secs() -> u64 {
+    // SAFETY: GetTickCount64 takes no pointer and returns a counter by value.
+    let millis = unsafe { GetTickCount64() };
+    millis / 1_000
+}
+
+/// `GetSystemTimes`. Read-only.
+pub fn cpu_times() -> Result<CpuTimes, WinError> {
+    let mut idle = FILETIME::default();
+    let mut kernel = FILETIME::default();
+    let mut user = FILETIME::default();
+    // SAFETY: the three pointers are to local, writable FILETIME values and are
+    // not retained after the call.
+    unsafe {
+        GetSystemTimes(
+            Some(&raw mut idle),
+            Some(&raw mut kernel),
+            Some(&raw mut user),
+        )
+    }
+    .map_err(|error| WinError::new("GetSystemTimes", error.code().0 as u32))?;
+    // Kernel time already includes idle time.
+    Ok(CpuTimes {
+        idle: ticks(idle),
+        total: ticks(kernel).saturating_add(ticks(user)),
+    })
+}
+
+/// Busy share between two readings, 0..=100. `None` when no time passed.
+#[must_use]
+pub fn cpu_busy_percent(earlier: CpuTimes, later: CpuTimes) -> Option<u8> {
+    let total = later.total.checked_sub(earlier.total)?;
+    let idle = later.idle.checked_sub(earlier.idle)?;
+    if total == 0 {
+        return None;
+    }
+    let busy = total.saturating_sub(idle);
+    let percent = busy.saturating_mul(100) / total;
+    Some(u8::try_from(percent.min(100)).unwrap_or(100))
+}
+
+/// Roots of the fixed local drives, such as `C:\`. Read-only.
+///
+/// Removable, network, and optical drives are left out, so nothing here wakes
+/// a sleeping share or an empty card reader.
+#[must_use]
+pub fn fixed_drive_roots() -> Vec<PathBuf> {
+    const DRIVE_FIXED: u32 = 3;
+    // SAFETY: GetLogicalDrives takes no pointer and returns a bit mask by value.
+    let mask = unsafe { GetLogicalDrives() };
+    let mut roots = Vec::new();
+    for (index, letter) in ('A'..='Z').enumerate() {
+        if mask & (1u32 << index) == 0 {
+            continue;
+        }
+        let root = PathBuf::from(format!("{letter}:\\"));
+        let wide = to_wide(&root);
+        // SAFETY: wide is NUL-terminated and not retained. The call only reads it.
+        let kind = unsafe { GetDriveTypeW(PCWSTR(wide.as_ptr())) };
+        if kind == DRIVE_FIXED {
+            roots.push(root);
+        }
+    }
+    roots
+}
+
+fn ticks(time: FILETIME) -> u64 {
+    (u64::from(time.dwHighDateTime) << 32) | u64::from(time.dwLowDateTime)
 }
 
 /// Free space for the volume that contains `path`. Read-only.
@@ -427,11 +547,52 @@ mod tests {
     }
 
     #[test]
+    fn local_clock_is_hour_and_minute() {
+        let clock = local_clock();
+        assert_eq!(clock.len(), 5);
+        assert_eq!(clock.as_bytes().get(2).copied(), Some(b':'));
+    }
+
+    #[test]
     fn system_drive_reports_free_space() {
         let windows = windows_directory().expect("windows");
         let space = disk_free_space(&windows).expect("space");
         assert!(space.total_bytes > 0);
         assert!(space.free_bytes <= space.total_bytes);
+    }
+
+    #[test]
+    fn memory_and_uptime_are_plausible() {
+        let memory = memory_status().expect("memory");
+        assert!(memory.total_bytes > 0);
+        assert!(memory.available_bytes <= memory.total_bytes);
+        assert!(uptime_secs() > 0);
+    }
+
+    #[test]
+    fn cpu_load_needs_two_readings() {
+        let first = cpu_times().expect("cpu");
+        assert!(first.idle <= first.total);
+        assert_eq!(cpu_busy_percent(first, first), None);
+        let later = CpuTimes {
+            idle: first.idle + 25,
+            total: first.total + 100,
+        };
+        assert_eq!(cpu_busy_percent(first, later), Some(75));
+        assert_eq!(cpu_busy_percent(later, first), None);
+    }
+
+    #[test]
+    fn the_windows_drive_is_a_fixed_drive() {
+        let windows = windows_directory().expect("windows");
+        let root = windows.ancestors().last().expect("root").to_path_buf();
+        let roots = fixed_drive_roots();
+        assert!(
+            roots.iter().any(|drive| drive
+                .to_string_lossy()
+                .eq_ignore_ascii_case(&root.to_string_lossy())),
+            "{roots:?} {root:?}"
+        );
     }
 
     #[test]

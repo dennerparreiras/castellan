@@ -9,7 +9,7 @@ Updated 2026-11-19. Product version 0.1.0. This is not v1.0.
 | M0 Foundation | Local gate is green. `cargo xtask ci` exited 0 on 2026-11-19 (fmt, clippy `-D warnings`, workspace tests, architecture scan). The public repository is https://github.com/dennerparreiras/castellan. Branch protection requires a pull request, linear history, and the CI checks, and it blocks force-pushes. A second reviewer is not required, because there is only one maintainer. |
 | M1 Contracts | Partial. Core types, the action enum, policy, and the Keep Score have tests, including the golden score of 83. Coverage is not measured at 95%. Platform fakes beyond the in-memory sweep view are not built. |
 | M2 Guard and store | Partial. Path rules, `decide_node`, the in-memory walker, the hash-chain ledger, and a read-only live scan exist. Handle-based live delete, undo, and mutation testing are not done. `cargo-mutants` has not been run. |
-| M3 TUI | Partial. One theme, three tabs, help, a small-terminal message, and tests that the overview does not show a fake score. No animation engine, no snapshots, no GIF. |
+| M3 TUI | Partial. Redesigned: header with real tabs, centered body, contextual footer, help with a glossary, go-to palette, grouped settings with an explanation card. Overview shows the Keep Score with a band legend, findings with proof and a next step, and live processor, memory, drive, and uptime readings. Sweep measures both temp folders read-only and explains why Prefetch is refused. Vitals has live charts. Rooms 4–9 explain what they will do. Every room is tested at four sizes in Unicode and ASCII. No other themes, no slide transitions, no GIF. |
 | M4–M9 | Not started. No vitals, net, shield, boost, game mode, fix playbooks, broker, scheduled task, MCP server, installer, winget, Scoop bucket, or signed release. |
 
 ## What a person can run
@@ -18,7 +18,7 @@ Updated 2026-11-19. Product version 0.1.0. This is not v1.0.
 - `castellan about`, `castellan doctor`.
 - `castellan sweep targets`.
 - `castellan sweep clean`: always refuses. Exit 0 with `--dry-run`, otherwise 20.
-- No arguments on a terminal: the small TUI. Pipes and tests take the CLI path.
+- No arguments on a terminal: the keep. Overview shows the partial storage score. Pipes and tests take the CLI path.
 
 ## Owner-only blockers
 

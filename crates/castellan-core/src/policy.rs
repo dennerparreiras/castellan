@@ -95,6 +95,9 @@ impl MachinePolicy {
 }
 
 /// User preferences. These can turn features off. They cannot grant new powers.
+///
+/// The sign-in flags record a wish. [`decide`] ignores them. Nothing here
+/// registers a scheduled task or deletes a file.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UserPreferences {
@@ -106,6 +109,18 @@ pub struct UserPreferences {
     pub min_age_secs: u64,
     /// User asked for read-only mode.
     pub lockdown: bool,
+    /// Wish: clean user temp at sign-in. Not a permission and not a task.
+    #[serde(default)]
+    pub user_temp_at_sign_in: bool,
+    /// Wish: clean Windows temp at sign-in. Not a permission and not a task.
+    #[serde(default)]
+    pub windows_temp_at_sign_in: bool,
+    /// Skip the splash and hold the gauges still.
+    #[serde(default)]
+    pub reduce_motion: bool,
+    /// Draw ASCII pictures.
+    #[serde(default)]
+    pub ascii_art: bool,
 }
 
 impl UserPreferences {
@@ -117,7 +132,19 @@ impl UserPreferences {
             disabled_targets: Vec::new(),
             min_age_secs: DEFAULT_MIN_AGE_SECS,
             lockdown: false,
+            user_temp_at_sign_in: false,
+            windows_temp_at_sign_in: false,
+            reduce_motion: false,
+            ascii_art: false,
         }
+    }
+
+    /// Serialize a valid document.
+    pub fn to_toml(&self) -> Result<String, CoreError> {
+        self.validate()?;
+        toml::to_string_pretty(self).map_err(|error| {
+            CoreError::config(format!("user config could not be written ({error})"))
+        })
     }
 
     /// Parse and validate TOML.
@@ -367,6 +394,28 @@ run_command = "not-a-catalog-entry"
         ));
         assert!(!origin_allows(Origin::Mcp, RiskTier::Sensitive, &policy));
         assert!(!origin_allows(Origin::Mcp, RiskTier::Moderate, &policy));
+    }
+
+    #[test]
+    fn older_preferences_still_parse_and_a_wish_grants_nothing() {
+        let text =
+            "schema_version = 1\ndisabled_targets = []\nmin_age_secs = 86400\nlockdown = false\n";
+        let prefs = UserPreferences::from_toml(text).expect("parse");
+        assert!(!prefs.user_temp_at_sign_in);
+        assert!(!prefs.reduce_motion);
+        let mut wishing = prefs.clone();
+        wishing.user_temp_at_sign_in = true;
+        wishing.windows_temp_at_sign_in = true;
+        let policy = MachinePolicy::compiled_default();
+        let action = sweep(86_400);
+        assert_eq!(
+            decide(&action, Origin::Cli, &policy, &prefs, None),
+            decide(&action, Origin::Cli, &policy, &wishing, None)
+        );
+        let written = wishing.to_toml().expect("toml");
+        let again = UserPreferences::from_toml(&written).expect("round trip");
+        assert!(again.user_temp_at_sign_in);
+        assert!(again.windows_temp_at_sign_in);
     }
 }
 
